@@ -13,7 +13,7 @@ jobs:
   build:
     runs-on: windows-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -24,9 +24,11 @@ jobs:
           dotnet-version: '9.x'
 
       - name: Build with dotnet
+        working-directory: AppliFilms.Api
         run: dotnet build --configuration Release
 
       - name: dotnet publish
+        working-directory: AppliFilms.Api
         run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
 
       - name: Upload artifact for deployment job
@@ -39,8 +41,8 @@ jobs:
     runs-on: windows-latest
     needs: build
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
       - name: Download artifact from build job
@@ -62,4 +64,3 @@ jobs:
           app-name: 'foyer-movies'
           slot-name: 'Production'
           package: .
-          
