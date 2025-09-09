@@ -64,4 +64,3 @@ jobs:
           app-name: 'foyer-movies'
           slot-name: 'Production'
           package: .
-
