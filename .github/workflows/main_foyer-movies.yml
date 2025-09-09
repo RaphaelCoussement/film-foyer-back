@@ -25,11 +25,11 @@ jobs:
 
       - name: Build with dotnet
         working-directory: AppliFilms.Api
-        run: dotnet build AppliFilms.Api/AppliFilms.Api.csproj --configuration Release
+        run: dotnet build --configuration Release
 
       - name: dotnet publish
         working-directory: AppliFilms.Api
-        run: dotnet publish AppliFilms.Api/AppliFilms.Api.csproj -c Release -o "${{env.DOTNET_ROOT}}/myapp"
+        run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
