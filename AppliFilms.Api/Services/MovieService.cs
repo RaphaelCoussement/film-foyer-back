@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using AppliFilms.Api.DTOs.Movie;
 using AppliFilms.Api.Services.Interfaces;
 using System.Net.Http.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 
@@ -43,7 +44,7 @@ namespace AppliFilms.Api.Services
         // 3. Retourner le DTO correctement
         return new MovieDto
         {
-            ImdbId = details.ImdbId, // vrai IMDb ID
+            ImdbId = details.Id.ToString(), // vrai IMDb ID
             Title = details.Title,   // original_title
             PosterUrl = string.IsNullOrEmpty(details.PosterPath)
                 ? null
@@ -55,50 +56,49 @@ namespace AppliFilms.Api.Services
         };
     }
 
-    // === Classes internes pour la désérialisation JSON ===
-
+    // === Classes internes pour System.Text.Json ===
     private class TmdbSearchResponse
     {
-        [JsonProperty("results")]
+        [JsonPropertyName("results")]
         public List<TmdbMovieResult> Results { get; set; }
     }
 
     private class TmdbMovieResult
     {
-        [JsonProperty("id")]
+        [JsonPropertyName("id")]
         public int Id { get; set; }
 
-        [JsonProperty("title")]
+        [JsonPropertyName("title")]
         public string Title { get; set; }
 
-        [JsonProperty("release_date")]
+        [JsonPropertyName("release_date")]
         public string ReleaseDate { get; set; }
 
-        [JsonProperty("overview")]
+        [JsonPropertyName("overview")]
         public string Overview { get; set; }
 
-        [JsonProperty("poster_path")]
+        [JsonPropertyName("poster_path")]
         public string PosterPath { get; set; }
     }
 
     private class TmdbMovieDetails
     {
-        [JsonProperty("id")]
+        [JsonPropertyName("id")]
         public int Id { get; set; }
 
-        [JsonProperty("original_title")]
+        [JsonPropertyName("original_title")]
         public string Title { get; set; }
 
-        [JsonProperty("release_date")]
+        [JsonPropertyName("release_date")]
         public string ReleaseDate { get; set; }
 
-        [JsonProperty("overview")]
+        [JsonPropertyName("overview")]
         public string Overview { get; set; }
 
-        [JsonProperty("poster_path")]
+        [JsonPropertyName("poster_path")]
         public string PosterPath { get; set; }
 
-        [JsonProperty("imdb_id")]
+        [JsonPropertyName("imdb_id")]
         public string ImdbId { get; set; }
     }
 }

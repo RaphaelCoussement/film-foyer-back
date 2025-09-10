@@ -89,7 +89,9 @@ namespace AppliFilms.Api.Services
                 {
                     ImdbId = r.Movie.ImdbId,
                     Title = r.Movie.Title,
-                    PosterUrl = r.Movie.PosterUrl
+                    PosterUrl = r.Movie.PosterUrl,
+                    Plot = r.Movie.Plot,
+                    Year = r.Movie.Year
                 }
             })
             .OrderByDescending(r => r.ApprovalCount)
