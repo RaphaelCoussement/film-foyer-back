@@ -22,7 +22,7 @@ namespace AppliFilms.Api.Services
         _httpClient.DefaultRequestHeaders.Authorization = 
             new AuthenticationHeaderValue("Bearer", _bearerToken);
     }
-
+    
     public async Task<MovieDto> GetMovieByTitleAsync(string title)
     {
         // 1. Rechercher le film
@@ -33,38 +33,51 @@ namespace AppliFilms.Api.Services
         if (movie == null)
             throw new Exception("Film non trouvé sur TMDb");
 
-        // 2. détails
+        // 2. Récupérer les détails complets
         var detailsUrl = $"https://api.themoviedb.org/3/movie/{movie.Id}";
         var details = await _httpClient.GetFromJsonAsync<TmdbMovieDetails>(detailsUrl);
 
         if (details == null)
             throw new Exception("Impossible de récupérer les détails du film");
 
+        // 3. Retourner le DTO correctement
         return new MovieDto
         {
-            ImdbId = details.Id.ToString(),
-            Title = details.Title,
-            PosterUrl = string.IsNullOrEmpty(details.PosterPath) 
-                ? null 
+            ImdbId = details.ImdbId, // vrai IMDb ID
+            Title = details.Title,   // original_title
+            PosterUrl = string.IsNullOrEmpty(details.PosterPath)
+                ? null
                 : $"https://image.tmdb.org/t/p/w500{details.PosterPath}",
             Plot = details.Overview,
-            Year = !string.IsNullOrEmpty(details.ReleaseDate) 
-                ? DateTime.Parse(details.ReleaseDate).Year.ToString() 
+            Year = !string.IsNullOrEmpty(details.ReleaseDate)
+                ? DateTime.Parse(details.ReleaseDate).Year.ToString()
                 : null
         };
     }
-    
+
+    // === Classes internes pour la désérialisation JSON ===
+
     private class TmdbSearchResponse
     {
+        [JsonProperty("results")]
         public List<TmdbMovieResult> Results { get; set; }
     }
 
     private class TmdbMovieResult
     {
+        [JsonProperty("id")]
         public int Id { get; set; }
+
+        [JsonProperty("title")]
         public string Title { get; set; }
+
+        [JsonProperty("release_date")]
         public string ReleaseDate { get; set; }
+
+        [JsonProperty("overview")]
         public string Overview { get; set; }
+
+        [JsonProperty("poster_path")]
         public string PosterPath { get; set; }
     }
 
@@ -88,6 +101,5 @@ namespace AppliFilms.Api.Services
         [JsonProperty("imdb_id")]
         public string ImdbId { get; set; }
     }
-
 }
 }
