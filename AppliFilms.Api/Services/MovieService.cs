@@ -3,6 +3,7 @@ using AppliFilms.Api.DTOs.Movie;
 using AppliFilms.Api.Services.Interfaces;
 using System.Net.Http.Json;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 
 namespace AppliFilms.Api.Services
 {
@@ -32,7 +33,7 @@ namespace AppliFilms.Api.Services
         if (movie == null)
             throw new Exception("Film non trouvé sur TMDb");
 
-        // 2. Obtenir les détails complets (inclut imdb_id)
+        // 2. détails
         var detailsUrl = $"https://api.themoviedb.org/3/movie/{movie.Id}";
         var details = await _httpClient.GetFromJsonAsync<TmdbMovieDetails>(detailsUrl);
 
@@ -43,13 +44,16 @@ namespace AppliFilms.Api.Services
         {
             ImdbId = details.Id.ToString(),
             Title = details.Title,
-            PosterUrl = string.IsNullOrEmpty(details.PosterPath) ? null : $"https://image.tmdb.org/t/p/w500{details.PosterPath}",
+            PosterUrl = string.IsNullOrEmpty(details.PosterPath) 
+                ? null 
+                : $"https://image.tmdb.org/t/p/w500{details.PosterPath}",
             Plot = details.Overview,
-            Year = !string.IsNullOrEmpty(details.ReleaseDate) ? DateTime.Parse(details.ReleaseDate).Year.ToString() : null
+            Year = !string.IsNullOrEmpty(details.ReleaseDate) 
+                ? DateTime.Parse(details.ReleaseDate).Year.ToString() 
+                : null
         };
     }
-
-    // --- Classes pour la désérialisation ---
+    
     private class TmdbSearchResponse
     {
         public List<TmdbMovieResult> Results { get; set; }
@@ -66,12 +70,24 @@ namespace AppliFilms.Api.Services
 
     private class TmdbMovieDetails
     {
+        [JsonProperty("id")]
         public int Id { get; set; }
+
+        [JsonProperty("original_title")]
         public string Title { get; set; }
+
+        [JsonProperty("release_date")]
         public string ReleaseDate { get; set; }
+
+        [JsonProperty("overview")]
         public string Overview { get; set; }
+
+        [JsonProperty("poster_path")]
         public string PosterPath { get; set; }
+
+        [JsonProperty("imdb_id")]
         public string ImdbId { get; set; }
     }
+
 }
 }
