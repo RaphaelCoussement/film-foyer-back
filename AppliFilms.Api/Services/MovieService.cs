@@ -1,10 +1,8 @@
 using System.Net.Http.Headers;
 using AppliFilms.Api.DTOs.Movie;
 using AppliFilms.Api.Services.Interfaces;
-using System.Net.Http.Json;
 using System.Text.Json.Serialization;
-using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
+using GTranslate.Translators;
 
 namespace AppliFilms.Api.Services
 {
@@ -33,15 +31,21 @@ namespace AppliFilms.Api.Services
         var movie = searchResponse?.Results?.FirstOrDefault();
         if (movie == null)
             throw new Exception("Film non trouvé sur TMDb");
-
-        // 2. Récupérer les détails complets
+        
         var detailsUrl = $"https://api.themoviedb.org/3/movie/{movie.Id}";
         var details = await _httpClient.GetFromJsonAsync<TmdbMovieDetails>(detailsUrl);
 
         if (details == null)
             throw new Exception("Impossible de récupérer les détails du film");
-
-        // 3. Retourner le DTO correctement
+        
+        string translatedPlot = null;
+        if (!string.IsNullOrEmpty(details.Overview))
+        {
+            var translator = new GoogleTranslator();
+            var result = await translator.TranslateAsync(details.Overview, "fr");
+            translatedPlot = result.Translation;
+        }
+        
         return new MovieDto
         {
             ImdbId = details.Id.ToString(), // vrai IMDb ID
@@ -49,7 +53,7 @@ namespace AppliFilms.Api.Services
             PosterUrl = string.IsNullOrEmpty(details.PosterPath)
                 ? null
                 : $"https://image.tmdb.org/t/p/w500{details.PosterPath}",
-            Plot = details.Overview,
+            Plot = translatedPlot ?? details.Overview,
             Year = !string.IsNullOrEmpty(details.ReleaseDate)
                 ? DateTime.Parse(details.ReleaseDate).Year.ToString()
                 : null
