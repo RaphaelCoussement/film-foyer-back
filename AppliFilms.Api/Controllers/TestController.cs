@@ -24,4 +24,10 @@ public class TestController : ControllerBase
 
         return Ok("Mail envoyé (check Mailtrap) !");
     }
+
+    [HttpGet("ping")]
+    public IActionResult Ping()
+    {
+        return Ok("raphou");
+    }
 }
