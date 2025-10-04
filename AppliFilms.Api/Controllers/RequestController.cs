@@ -65,6 +65,25 @@ namespace AppliFilms.Api.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+        
+        [HttpDelete("user/{id}")]
+        public async Task<IActionResult> DeleteOwnRequest(Guid id)
+        {
+            try
+            {
+                var userId = GetUserId();
+                var result = await _requestService.DeleteRequestAsync(id, userId);
+
+                if (!result)
+                    return Forbid("Vous n'êtes pas autorisé à supprimer cette requête ou elle n'existe pas.");
+
+                return Ok(new { message = "Votre requête a bien été supprimée." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
 
     }
 }
