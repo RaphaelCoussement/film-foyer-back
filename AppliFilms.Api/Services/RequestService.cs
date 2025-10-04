@@ -123,7 +123,10 @@ namespace AppliFilms.Api.Services
                 });
             }
 
-            return result;
+            return result
+                .OrderByDescending(r => r.ApprovalCount)
+                .ThenBy(r => r.CreatedAt)
+                .ToList();
         }
 
         public async Task<bool> DeleteRequestAsync(Guid requestId, Guid userId)
