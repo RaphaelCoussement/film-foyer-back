@@ -29,7 +29,6 @@ namespace AppliFilms.Api.Controllers
             {
                 var request = await _requestService.CreateRequestAsync(dto, GetUserId());
                 return Ok(request);
-                
             }
             catch (Exception ex)
             {
@@ -37,10 +36,10 @@ namespace AppliFilms.Api.Controllers
             }
         }
 
-        [HttpGet("{date}")]
-        public async Task<IActionResult> GetByDate(DateTime date)
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
         {
-            var requests = await _requestService.GetRequestsByDateAsync(date);
+            var requests = await _requestService.GetAllRequestsAsync();
             return Ok(requests);
         }
 

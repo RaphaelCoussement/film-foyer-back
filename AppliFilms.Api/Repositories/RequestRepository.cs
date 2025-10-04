@@ -1,41 +1,38 @@
-using AppliFilms.Api.Data;
+using AppliFilms.Api.Data.Mongo;
 using AppliFilms.Api.Entities;
 using AppliFilms.Api.Repositories.Interfaces;
-using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
 
 namespace AppliFilms.Api.Repositories
 {
-    public class RequestRepository(AppDbContext context) : IRequestRepository
+    public class RequestRepository : IRequestRepository
     {
+        private readonly IMongoCollection<Request> _requests;
+
+        public RequestRepository(MongoDbService mongoService)
+        {
+            _requests = mongoService.GetCollection<Request>("Requests");
+        }
+
         public async Task<Request?> GetByIdAsync(Guid id) =>
-            await context.Requests.Include(r => r.Movie).Include(r => r.RequestedBy).FirstOrDefaultAsync(r => r.Id == id);
+            await _requests.Find(r => r.Id == id).FirstOrDefaultAsync();
 
-        public async Task<Request?> GetByMovieAndDateAsync(Guid movieId, DateTime eventDate)
+        public async Task<Request?> GetByMovieAsync(Guid movieId) =>
+            await _requests.Find(r => r.MovieId == movieId).FirstOrDefaultAsync();
+
+        public async Task<List<Request>> GetAllAsync() =>
+            await _requests.Find(_ => true).ToListAsync();
+
+        public async Task AddAsync(Request? request)
         {
-            var dateOnly = eventDate.Date.ToUniversalTime();
-            return await context.Requests
-                .FirstOrDefaultAsync(r => r.MovieId == movieId && r.EventDate.Date == dateOnly);
+            if (request == null) return;
+            await _requests.InsertOneAsync(request);
         }
 
-        public async Task<List<Request>> GetByDateAsync(DateTime eventDate)
+        public async Task RemoveAsync(Request? request)
         {
-            var dateOnly = eventDate.Date;
-
-            return await context.Requests
-                .Include(r => r.Movie)
-                .Include(r => r.RequestedBy)
-                .Include(r => r.Approvals)
-                .Where(r => r.EventDate >= dateOnly && r.EventDate < dateOnly.AddDays(1))
-                .ToListAsync();
+            if (request == null) return;
+            await _requests.DeleteOneAsync(r => r.Id == request.Id);
         }
-
-        public async Task AddAsync(Request? request) =>
-            await context.Requests.AddAsync(request);
-
-        public Task RemoveAsync(Request? request) =>
-            Task.FromResult(context.Requests.Remove(request));
-
-        public async Task SaveChangesAsync() =>
-            await context.SaveChangesAsync();
     }
 }

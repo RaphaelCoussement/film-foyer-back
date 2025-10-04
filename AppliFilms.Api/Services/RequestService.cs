@@ -7,17 +7,32 @@ using AppliFilms.Api.Services.Interfaces;
 
 namespace AppliFilms.Api.Services
 {
-    public class RequestService(IRequestRepository requestRepository, IMovieRepository movieRepository, IUserRepository userRepository, IMovieService movieService)
-        : IRequestService
+    public class RequestService : IRequestService
     {
+        private readonly IRequestRepository _requestRepository;
+        private readonly IMovieRepository _movieRepository;
+        private readonly IUserRepository _userRepository;
+        private readonly IMovieService _movieService;
+
+        public RequestService(
+            IRequestRepository requestRepository,
+            IMovieRepository movieRepository,
+            IUserRepository userRepository,
+            IMovieService movieService)
+        {
+            _requestRepository = requestRepository;
+            _movieRepository = movieRepository;
+            _userRepository = userRepository;
+            _movieService = movieService;
+        }
+
         public async Task<RequestDto> CreateRequestAsync(CreateRequestDto dto, Guid userId)
         {
             // Vérifier si le film existe déjà en DB
-            var movie = await movieRepository.GetByTitleAsync(dto.Title);
+            var movie = await _movieRepository.GetByTitleAsync(dto.Title);
             if (movie == null)
             {
-                // Appel OMDb API pour récupérer les infos
-                var movieDto = await movieService.GetMovieByTitleAsync(dto.Title);
+                var movieDto = await _movieService.GetMovieByTitleAsync(dto.Title);
 
                 movie = new Movie
                 {
@@ -29,18 +44,13 @@ namespace AppliFilms.Api.Services
                     Year = movieDto.Year
                 };
 
-                await movieRepository.AddAsync(movie);
-                await movieRepository.SaveChangesAsync();
+                await _movieRepository.AddAsync(movie);
             }
 
-            // Ne garder que la date (heure = 00:00 UTC)
-            var eventDateUtc = dto.EventDate.Date.ToUniversalTime();
-
-            // Vérifier si une demande pour ce film existe déjà ce jour
-            var existingRequest = await requestRepository.GetByMovieAndDateAsync(movie.Id, eventDateUtc);
-
+            // Vérifier si une demande pour ce film existe déjà
+            var existingRequest = await _requestRepository.GetByMovieAsync(movie.Id);
             if (existingRequest != null)
-                throw new Exception("Vous ou quelqu’un a déjà demandé ce film pour cette période");
+                throw new Exception("Ce film a déjà été demandé");
 
             // Créer la demande
             var request = new Request
@@ -48,19 +58,16 @@ namespace AppliFilms.Api.Services
                 Id = Guid.NewGuid(),
                 MovieId = movie.Id,
                 RequestedById = userId,
-                EventDate = eventDateUtc,
                 CreatedAt = DateTime.UtcNow
             };
 
-            await requestRepository.AddAsync(request);
-            await requestRepository.SaveChangesAsync();
+            await _requestRepository.AddAsync(request);
 
-            var user = await userRepository.GetByIdAsync(userId);
+            var user = await _userRepository.GetByIdAsync(userId);
 
             return new RequestDto
             {
                 Id = request.Id,
-                EventDate = request.EventDate,
                 CreatedAt = request.CreatedAt,
                 RequestedBy = user?.DisplayName ?? "Inconnu",
                 ApprovalCount = 0,
@@ -69,42 +76,48 @@ namespace AppliFilms.Api.Services
                     ImdbId = movie.ImdbId,
                     Title = movie.Title,
                     PosterUrl = movie.PosterUrl,
-                    Plot = movie.Plot
+                    Plot = movie.Plot,
+                    Year = movie.Year
                 }
             };
         }
 
-        public async Task<List<RequestDto>> GetRequestsByDateAsync(DateTime eventDate)
+        public async Task<List<RequestDto>> GetAllRequestsAsync()
         {
-            var requests = await requestRepository.GetByDateAsync(eventDate);
+            var requests = await _requestRepository.GetAllAsync();
 
-            return requests.Select(r => new RequestDto
+            var result = new List<RequestDto>();
+            foreach (var r in requests)
             {
-                Id = r.Id,
-                EventDate = r.EventDate,
-                CreatedAt = r.CreatedAt,
-                RequestedBy = r.RequestedBy?.DisplayName ?? "Inconnu",
-                ApprovalCount = r.Approvals?.Count ?? 0,
-                Movie = new MovieDto
+                var movie = await _movieRepository.GetByIdAsync(r.MovieId);
+                var user = await _userRepository.GetByIdAsync(r.RequestedById ?? Guid.Empty);
+
+                result.Add(new RequestDto
                 {
-                    ImdbId = r.Movie.ImdbId,
-                    Title = r.Movie.Title,
-                    PosterUrl = r.Movie.PosterUrl,
-                    Plot = r.Movie.Plot,
-                    Year = r.Movie.Year
-                }
-            })
-            .OrderByDescending(r => r.ApprovalCount)
-            .ToList();
+                    Id = r.Id,
+                    CreatedAt = r.CreatedAt,
+                    RequestedBy = user?.DisplayName ?? "Inconnu",
+                    ApprovalCount = r.ApprovalIds.Length,
+                    Movie = new MovieDto
+                    {
+                        ImdbId = movie?.ImdbId,
+                        Title = movie?.Title,
+                        PosterUrl = movie?.PosterUrl,
+                        Plot = movie?.Plot,
+                        Year = movie?.Year
+                    }
+                });
+            }
+
+            return result;
         }
 
         public async Task<bool> DeleteRequestAsync(Guid requestId, Guid userId)
         {
-            var request = await requestRepository.GetByIdAsync(requestId);
+            var request = await _requestRepository.GetByIdAsync(requestId);
             if (request == null || request.RequestedById != userId) return false;
 
-            requestRepository.RemoveAsync(request);
-            await requestRepository.SaveChangesAsync();
+            await _requestRepository.RemoveAsync(request);
             return true;
         }
     }

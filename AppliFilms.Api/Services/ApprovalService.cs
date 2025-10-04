@@ -1,7 +1,9 @@
-using AppliFilms.Api.DTOs.Approvals;
 using AppliFilms.Api.Entities;
 using AppliFilms.Api.Repositories.Interfaces;
 using AppliFilms.Api.Services.Interfaces;
+using System;
+using System.Threading.Tasks;
+using AppliFilms.Api.DTOs.Approvals;
 
 namespace AppliFilms.Api.Services
 {
@@ -37,11 +39,10 @@ namespace AppliFilms.Api.Services
             };
 
             await _approvalRepository.AddAsync(approval);
-            await _approvalRepository.SaveChangesAsync();
 
             var user = await _userRepository.GetByIdAsync(userId);
 
-            return new ApprovalDto
+            return new ApprovalDto()
             {
                 Id = approval.Id,
                 RequestId = requestId,

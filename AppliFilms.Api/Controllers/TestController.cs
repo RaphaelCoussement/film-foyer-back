@@ -1,27 +1,35 @@
-using AppliFilms.Api.Services;
+using AppliFilms.Api.Data.Mongo;
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
+using MongoDB.Driver;
 
-namespace AppliFilms.Api.Controllers;
-
-[ApiController]
-[Route("api/test")]
-public class TestController : ControllerBase
+namespace AppliFilms.Api.Controllers
 {
-    private readonly EmailService _emailService;
-
-    public TestController(EmailService emailService)
+    [ApiController]
+    [Route("api/test")]
+    public class TestController : ControllerBase
     {
-        _emailService = emailService;
-    }
+        private readonly MongoDbService _mongoService;
 
-    [HttpGet("send-mail")]
-    public async Task<IActionResult> SendMail()
-    {
-        await _emailService.SendEmailAsync(
-            "Test Mail AppliFilms",
-            "Ceci est un mail de test envoyé via Mailtrap !"
-        );
+        public TestController(MongoDbService mongoService)
+        {
+            _mongoService = mongoService;
+        }
 
-        return Ok("Mail envoyé (check Mailtrap) !");
+        [HttpGet("mongodb")]
+        public IActionResult CheckMongoConnection()
+        {
+            try
+            {
+                var movies = _mongoService.GetCollection<BsonDocument>("Movies");
+                var count = movies.CountDocuments(FilterDefinition<BsonDocument>.Empty);
+
+                return Ok(new { message = "Connexion à MongoDB OK", movieCount = count });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Erreur de connexion à MongoDB", error = ex.Message });
+            }
+        }
     }
 }

@@ -35,7 +35,6 @@ namespace AppliFilms.Api.Services
             };
 
             await _userRepository.AddAsync(user);
-            await _userRepository.SaveChangesAsync();
 
             var token = GenerateJwtToken(user);
 

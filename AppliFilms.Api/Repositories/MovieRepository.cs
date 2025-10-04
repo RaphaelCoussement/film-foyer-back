@@ -1,22 +1,34 @@
-using AppliFilms.Api.Data;
+using AppliFilms.Api.Data.Mongo;
 using AppliFilms.Api.Entities;
 using AppliFilms.Api.Repositories.Interfaces;
-using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
+using System;
+using System.Threading.Tasks;
 
 namespace AppliFilms.Api.Repositories
 {
-    public class MovieRepository(AppDbContext context) : IMovieRepository
+    // Implémentation Mongo
+    public class MovieRepository : IMovieRepository
     {
-        public async Task<Movie?> GetByImdbIdAsync(string imdbId) =>
-            await context.Movies.FirstOrDefaultAsync(m => m.ImdbId == imdbId);
-        
+        private readonly IMongoCollection<Movie> _movies;
+
+        public MovieRepository(MongoDbService mongoService)
+        {
+            _movies = mongoService.GetCollection<Movie>("Movies");
+        }
+
+        public async Task<Movie?> GetByIdAsync(Guid id) =>
+            await _movies.Find(m => m.Id == id).FirstOrDefaultAsync();
+
         public async Task<Movie?> GetByTitleAsync(string title) =>
-            await context.Movies.FirstOrDefaultAsync(m => m.Title == title);
+            await _movies.Find(m => m.Title == title).FirstOrDefaultAsync();
 
-        public async Task AddAsync(Movie? movie) =>
-            await context.Movies.AddAsync(movie);
+        public async Task AddAsync(Movie? movie)
+        {
+            if (movie == null) return;
+            await _movies.InsertOneAsync(movie);
+        }
 
-        public async Task SaveChangesAsync() =>
-            await context.SaveChangesAsync();
+        public Task SaveChangesAsync() => Task.CompletedTask;
     }
 }
