@@ -120,5 +120,11 @@ namespace AppliFilms.Api.Services
             await _requestRepository.RemoveAsync(request);
             return true;
         }
+        
+        public async Task DeleteAllRequestsAsync()
+        {
+            await _requestRepository.DeleteAllAsync();
+        }
+
     }
 }

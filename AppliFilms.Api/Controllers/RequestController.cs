@@ -50,5 +50,21 @@ namespace AppliFilms.Api.Controllers
             if (!result) return BadRequest(new { message = "Impossible de supprimer cette demande" });
             return NoContent();
         }
+        
+        [HttpDelete("clear")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ClearAllRequests()
+        {
+            try
+            {
+                await _requestService.DeleteAllRequestsAsync();
+                return Ok(new { message = "Toutes les demandes ont été supprimées avec succès." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
     }
 }
