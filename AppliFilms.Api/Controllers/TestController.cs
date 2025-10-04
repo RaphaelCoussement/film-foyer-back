@@ -15,6 +15,9 @@ namespace AppliFilms.Api.Controllers
         {
             _mongoService = mongoService;
         }
+        
+        [HttpGet]
+        public IActionResult Get() => Ok("Alive");
 
         [HttpGet("mongodb")]
         public IActionResult CheckMongoConnection()
