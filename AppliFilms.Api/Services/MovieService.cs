@@ -4,7 +4,6 @@ using AppliFilms.Api.Entities;
 using AppliFilms.Api.Repositories.Interfaces;
 using AppliFilms.Api.Services.Interfaces;
 using System.Text.Json.Serialization;
-using GTranslate.Translators;
 
 namespace AppliFilms.Api.Services
 {
@@ -21,13 +20,12 @@ namespace AppliFilms.Api.Services
             _movieRepository = movieRepository;
 
             _httpClient.DefaultRequestHeaders.Clear();
-            _httpClient.DefaultRequestHeaders.Authorization = 
+            _httpClient.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", _bearerToken);
         }
 
         public async Task<MovieDto> GetMovieByTitleAsync(string title)
         {
-            // Vérifier si le film existe déjà en base
             var existingMovie = await _movieRepository.GetByTitleAsync(title);
             if (existingMovie != null)
             {
@@ -37,49 +35,43 @@ namespace AppliFilms.Api.Services
                     Title = existingMovie.Title,
                     PosterUrl = existingMovie.PosterUrl,
                     Plot = existingMovie.Plot,
-                    Year = existingMovie.Year
+                    Year = existingMovie.Year,
+                    Duration = existingMovie.Duration
                 };
             }
-
-            // Rechercher le film sur TMDb
-            var searchUrl = $"https://api.themoviedb.org/3/search/movie?query={Uri.EscapeDataString(title)}";
+            
+            var searchUrl = $"https://api.themoviedb.org/3/search/movie?query={Uri.EscapeDataString(title)}&language=fr";
             var searchResponse = await _httpClient.GetFromJsonAsync<TmdbSearchResponse>(searchUrl);
 
             var movie = searchResponse?.Results?.FirstOrDefault();
             if (movie == null)
                 throw new Exception("Film non trouvé sur TMDb");
-            
-            var detailsUrl = $"https://api.themoviedb.org/3/movie/{movie.Id}";
+
+            // Détails du film
+            var detailsUrl = $"https://api.themoviedb.org/3/movie/{movie.Id}?language=fr";
             var details = await _httpClient.GetFromJsonAsync<TmdbMovieDetails>(detailsUrl);
 
             if (details == null)
                 throw new Exception("Impossible de récupérer les détails du film");
-            
-            string translatedPlot = null;
-            if (!string.IsNullOrEmpty(details.Overview))
-            {
-                var translator = new GoogleTranslator();
-                var result = await translator.TranslateAsync(details.Overview, "fr");
-                translatedPlot = result.Translation;
-            }
 
-            // Créer l'entité Movie
+            // Crée l'entité Movie
             var movieEntity = new Movie
             {
                 Id = Guid.NewGuid(),
                 ImdbId = details.ImdbId ?? details.Id.ToString(),
                 Title = details.Title,
                 PosterUrl = string.IsNullOrEmpty(details.PosterPath) ? null : $"https://image.tmdb.org/t/p/w500{details.PosterPath}",
-                Plot = translatedPlot ?? details.Overview,
-                Year = !string.IsNullOrEmpty(details.ReleaseDate) ? DateTime.Parse(details.ReleaseDate).Year.ToString() : null,
+                Plot = details.Overview,
+                Year = !string.IsNullOrEmpty(details.ReleaseDate)
+                    ? DateTime.Parse(details.ReleaseDate).Year.ToString()
+                    : null,
                 Duration = details.Runtime,
                 CreatedAt = DateTime.UtcNow
             };
-
-            // Ajouter dans MongoDB
+            
             await _movieRepository.AddAsync(movieEntity);
             await _movieRepository.SaveChangesAsync();
-
+            
             return new MovieDto
             {
                 ImdbId = movieEntity.ImdbId,
@@ -120,7 +112,7 @@ namespace AppliFilms.Api.Services
             [JsonPropertyName("id")]
             public int Id { get; set; }
 
-            [JsonPropertyName("original_title")]
+            [JsonPropertyName("title")]
             public string Title { get; set; }
 
             [JsonPropertyName("release_date")]
@@ -134,7 +126,7 @@ namespace AppliFilms.Api.Services
 
             [JsonPropertyName("imdb_id")]
             public string ImdbId { get; set; }
-            
+
             [JsonPropertyName("runtime")]
             public int? Runtime { get; set; }
         }
