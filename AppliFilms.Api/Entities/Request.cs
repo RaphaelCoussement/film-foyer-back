@@ -18,5 +18,7 @@ namespace AppliFilms.Api.Entities
 
         [BsonRepresentation(BsonType.String)]
         public Guid[] ApprovalIds { get; set; } = Array.Empty<Guid>();
+        
+        public int ApprovalCount { get; set; } = 0;
     }
 }

@@ -29,8 +29,19 @@ namespace AppliFilms.Api.Services
         public async Task<RequestDto> CreateRequestAsync(CreateRequestDto dto, Guid userId)
         {
             // Vérifier si le film existe déjà en DB
-            var movie = await _movieRepository.GetByTitleAsync(dto.Title);
-            if (movie == null)
+            var existingMovie = await _movieRepository.GetByTitleAsync(dto.Title);
+
+            // Vérifier si une demande pour ce film existe déjà
+            if (existingMovie != null)
+            {
+                var existingRequest = await _requestRepository.GetByMovieAsync(existingMovie.Id);
+                if (existingRequest != null)
+                    throw new Exception("Ce film a déjà été demandé");
+            }
+
+            // Créer le film seulement s'il n'existe pas
+            Movie movie;
+            if (existingMovie == null)
             {
                 var movieDto = await _movieService.GetMovieByTitleAsync(dto.Title);
 
@@ -41,16 +52,16 @@ namespace AppliFilms.Api.Services
                     Title = movieDto.Title,
                     Plot = movieDto.Plot,
                     PosterUrl = movieDto.PosterUrl,
-                    Year = movieDto.Year
+                    Year = movieDto.Year,
+                    Duration = movieDto.Duration // si tu as ajouté la durée
                 };
 
                 await _movieRepository.AddAsync(movie);
             }
-
-            // Vérifier si une demande pour ce film existe déjà
-            var existingRequest = await _requestRepository.GetByMovieAsync(movie.Id);
-            if (existingRequest != null)
-                throw new Exception("Ce film a déjà été demandé");
+            else
+            {
+                movie = existingMovie;
+            }
 
             // Créer la demande
             var request = new Request
@@ -58,7 +69,8 @@ namespace AppliFilms.Api.Services
                 Id = Guid.NewGuid(),
                 MovieId = movie.Id,
                 RequestedById = userId,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                ApprovalIds = Array.Empty<Guid>()
             };
 
             await _requestRepository.AddAsync(request);
@@ -77,10 +89,12 @@ namespace AppliFilms.Api.Services
                     Title = movie.Title,
                     PosterUrl = movie.PosterUrl,
                     Plot = movie.Plot,
-                    Year = movie.Year
+                    Year = movie.Year,
+                    Duration = movie.Duration // si tu l'as ajouté
                 }
             };
         }
+
 
         public async Task<List<RequestDto>> GetAllRequestsAsync()
         {

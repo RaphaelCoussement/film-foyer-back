@@ -72,6 +72,7 @@ namespace AppliFilms.Api.Services
                 PosterUrl = string.IsNullOrEmpty(details.PosterPath) ? null : $"https://image.tmdb.org/t/p/w500{details.PosterPath}",
                 Plot = translatedPlot ?? details.Overview,
                 Year = !string.IsNullOrEmpty(details.ReleaseDate) ? DateTime.Parse(details.ReleaseDate).Year.ToString() : null,
+                Duration = details.Runtime,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -85,7 +86,8 @@ namespace AppliFilms.Api.Services
                 Title = movieEntity.Title,
                 PosterUrl = movieEntity.PosterUrl,
                 Plot = movieEntity.Plot,
-                Year = movieEntity.Year
+                Year = movieEntity.Year,
+                Duration = movieEntity.Duration
             };
         }
 
@@ -132,6 +134,9 @@ namespace AppliFilms.Api.Services
 
             [JsonPropertyName("imdb_id")]
             public string ImdbId { get; set; }
+            
+            [JsonPropertyName("runtime")]
+            public int? Runtime { get; set; }
         }
     }
 }

@@ -39,6 +39,13 @@ namespace AppliFilms.Api.Repositories
         {
             await _requests.DeleteManyAsync(_ => true);
         }
+        
+        public async Task UpdateAsync(Request request)
+        {
+            if (request == null) return;
+            await _requests.ReplaceOneAsync(r => r.Id == request.Id, request);
+        }
+
 
     }
 }

@@ -14,6 +14,7 @@ namespace AppliFilms.Api.Entities
         public string? Year { get; set; }
         public string? PosterUrl { get; set; }
         public string? Plot { get; set; }
+        public int? Duration { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

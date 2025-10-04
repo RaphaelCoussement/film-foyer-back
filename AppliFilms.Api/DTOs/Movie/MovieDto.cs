@@ -7,5 +7,6 @@ namespace AppliFilms.Api.DTOs.Movie
         public string? Year { get; set; }
         public string? PosterUrl { get; set; }
         public string? Plot { get; set; }
+        public int? Duration { get; set; }
     }
 }

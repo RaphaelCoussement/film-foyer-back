@@ -6,5 +6,6 @@ namespace AppliFilms.Api.DTOs.Approvals
         public Guid RequestId { get; set; }
         public string UserDisplayName { get; set; }
         public DateTime CreatedAt { get; set; }
+        public int ApprovalCount { get; set; }
     }
 }

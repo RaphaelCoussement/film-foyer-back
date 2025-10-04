@@ -40,6 +40,13 @@ namespace AppliFilms.Api.Services
 
             await _approvalRepository.AddAsync(approval);
 
+            // === Mettre à jour le compteur et la liste des ApprovalIds ===
+            var approvalIds = request.ApprovalIds.ToList();
+            approvalIds.Add(approval.Id);
+            request.ApprovalIds = approvalIds.ToArray();
+            request.ApprovalCount = request.ApprovalIds.Length; // nombre de votes
+            await _requestRepository.UpdateAsync(request);
+
             var user = await _userRepository.GetByIdAsync(userId);
 
             return new ApprovalDto()
@@ -47,7 +54,8 @@ namespace AppliFilms.Api.Services
                 Id = approval.Id,
                 RequestId = requestId,
                 UserDisplayName = user?.DisplayName ?? "Inconnu",
-                CreatedAt = approval.CreatedAt
+                CreatedAt = approval.CreatedAt,
+                ApprovalCount = request.ApprovalCount
             };
         }
     }
