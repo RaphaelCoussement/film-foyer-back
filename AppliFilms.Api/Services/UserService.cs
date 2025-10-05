@@ -52,17 +52,20 @@ namespace AppliFilms.Api.Services
                 IsAdmin = user.IsAdmin
             };
         }
-
+        
         public async Task ChangePasswordAsync(Guid userId, string oldPassword, string newPassword)
         {
             var user = await _userRepository.GetByIdAsync(userId);
             if (user == null)
                 throw new Exception("Utilisateur introuvable.");
 
-            if (!VerifyPassword(oldPassword, user.PasswordHash))
+            // Vérifie l'ancien mot de passe avec BCrypt
+            if (!BCrypt.Net.BCrypt.Verify(oldPassword, user.PasswordHash))
                 throw new Exception("Ancien mot de passe incorrect.");
 
-            user.PasswordHash = HashPassword(newPassword);
+            // Hache le nouveau mot de passe avec BCrypt
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+
             await _userRepository.SaveChangesAsync(user);
         }
         
@@ -93,12 +96,6 @@ namespace AppliFilms.Api.Services
             using var sha256 = SHA256.Create();
             var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
             return Convert.ToBase64String(bytes);
-        }
-
-        private static bool VerifyPassword(string password, string storedHash)
-        {
-            var hashed = HashPassword(password);
-            return hashed == storedHash;
         }
         
         public async Task AddFavoriteAsync(Guid userId, Guid movieId)
@@ -139,6 +136,7 @@ namespace AppliFilms.Api.Services
                 {
                     favorites.Add(new MovieDto
                     {
+                        Id = movie.Id,
                         ImdbId = movie.ImdbId,
                         Title = movie.Title,
                         PosterUrl = movie.PosterUrl,
