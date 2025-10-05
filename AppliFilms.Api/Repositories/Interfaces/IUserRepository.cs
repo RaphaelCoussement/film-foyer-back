@@ -7,6 +7,6 @@ namespace AppliFilms.Api.Repositories.Interfaces
         Task<User?> GetByIdAsync(Guid id);
         Task<User> GetByEmailAsync(string email);
         Task AddAsync(User? user);
-        Task SaveChangesAsync();
+        Task SaveChangesAsync(User user);
     }
 }

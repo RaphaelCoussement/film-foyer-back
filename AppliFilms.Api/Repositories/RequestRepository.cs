@@ -47,6 +47,11 @@ namespace AppliFilms.Api.Repositories
         }
 
         public Task SaveChangesAsync() => Task.CompletedTask;
+        
+        public async Task<IEnumerable<Request>> GetByUserIdAsync(Guid userId)
+        {
+            return await _requests.Find(r => r.RequestedById == userId).ToListAsync();
+        }
 
     }
 }

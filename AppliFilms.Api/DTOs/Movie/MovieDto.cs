@@ -2,6 +2,7 @@ namespace AppliFilms.Api.DTOs.Movie
 {
     public class MovieDto
     {
+        public Guid Id { get; set; }
         public string ImdbId { get; set; }
         public string? Title { get; set; }
         public string? Year { get; set; }

@@ -27,6 +27,11 @@ namespace AppliFilms.Api.Repositories
             if (user == null) return;
             await _users.InsertOneAsync(user);
         }
+        
+        public async Task SaveChangesAsync(User user)
+        {
+            await _users.ReplaceOneAsync(u => u.Id == user.Id, user);
+        }
 
         public Task SaveChangesAsync() => Task.CompletedTask;
     }

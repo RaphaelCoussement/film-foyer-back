@@ -12,5 +12,6 @@ namespace AppliFilms.Api.Repositories.Interfaces
         Task DeleteAllAsync();
         Task UpdateAsync(Request? request);
         Task SaveChangesAsync();
+        Task<IEnumerable<Request>> GetByUserIdAsync(Guid userId);
     }
 }

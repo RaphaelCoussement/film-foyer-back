@@ -20,6 +20,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddHttpClient<IMovieService, MovieService>();
 builder.Services.AddScoped<IRequestService, RequestService>();
 builder.Services.AddScoped<IApprovalService, ApprovalService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 // DB - MongoDB
 builder.Services.Configure<MongoDbSettings>(

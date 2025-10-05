@@ -125,6 +125,7 @@ namespace AppliFilms.Api.Services
                     ApprovalCount = r.ApprovalIds.Length,
                     Movie = new MovieDto
                     {
+                        Id = movie.Id,
                         ImdbId = movie?.ImdbId,
                         Title = movie?.Title,
                         PosterUrl = movie?.PosterUrl,
