@@ -2,6 +2,6 @@ namespace AppliFilms.Api.DTOs.Requests
 {
     public class CreateRequestDto
     {
-        public string Title { get; set; }
+        public Guid MovieId { get; set; }
     }
 }

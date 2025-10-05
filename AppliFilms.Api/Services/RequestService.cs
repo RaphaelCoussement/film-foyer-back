@@ -28,40 +28,15 @@ namespace AppliFilms.Api.Services
 
         public async Task<RequestDto> CreateRequestAsync(CreateRequestDto dto, Guid userId)
         {
-            // Vérifier si le film existe déjà en DB
-            var existingMovie = await _movieRepository.GetByTitleAsync(dto.Title);
+            // Récupérer le film par Id
+            var movie = await _movieRepository.GetByIdAsync(dto.MovieId);
+            if (movie == null)
+                throw new Exception("Le film n'existe pas");
 
             // Vérifier si une demande pour ce film existe déjà
-            if (existingMovie != null)
-            {
-                var existingRequest = await _requestRepository.GetByMovieAsync(existingMovie.Id);
-                if (existingRequest != null)
-                    throw new Exception("Ce film a déjà été demandé");
-            }
-
-            // Créer le film seulement s'il n'existe pas
-            Movie movie;
-            if (existingMovie == null)
-            {
-                var movieDto = await _movieService.GetMovieByTitleAsync(dto.Title);
-
-                movie = new Movie
-                {
-                    Id = Guid.NewGuid(),
-                    ImdbId = movieDto.ImdbId,
-                    Title = movieDto.Title,
-                    Plot = movieDto.Plot,
-                    PosterUrl = movieDto.PosterUrl,
-                    Year = movieDto.Year,
-                    Duration = movieDto.Duration // si tu as ajouté la durée
-                };
-
-                await _movieRepository.AddAsync(movie);
-            }
-            else
-            {
-                movie = existingMovie;
-            }
+            var existingRequest = await _requestRepository.GetByMovieAsync(movie.Id);
+            if (existingRequest != null)
+                throw new Exception("Ce film a déjà été demandé");
 
             // Créer la demande
             var request = new Request
@@ -90,7 +65,7 @@ namespace AppliFilms.Api.Services
                     PosterUrl = movie.PosterUrl,
                     Plot = movie.Plot,
                     Year = movie.Year,
-                    Duration = movie.Duration // si tu l'as ajouté
+                    Duration = movie.Duration
                 }
             };
         }
