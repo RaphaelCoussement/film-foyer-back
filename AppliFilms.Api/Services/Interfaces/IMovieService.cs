@@ -6,5 +6,6 @@ namespace AppliFilms.Api.Services.Interfaces
     {
         Task<MovieDto> GetMovieByTitleAsync(string title);
         Task<List<MovieSearchResultDto>> SearchMoviesAsync(string title);
+        Task<MovieDto> GetMovieByTmdbIdAsync(int tmdbId);
     }
 }

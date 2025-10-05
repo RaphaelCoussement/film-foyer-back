@@ -5,7 +5,7 @@ namespace AppliFilms.Api.DTOs.Requests
 {
     public class CreateRequestDto
     {
-        [BsonRepresentation(BsonType.String)]
-        public Guid MovieId { get; set; }
+        public Guid? MovieId { get; set; }      // pour film déjà en DB
+        public int? TmdbId { get; set; }        // pour film à créer
     }
 }

@@ -28,17 +28,51 @@ namespace AppliFilms.Api.Services
 
         public async Task<RequestDto> CreateRequestAsync(CreateRequestDto dto, Guid userId)
         {
-            // Récupérer le film par Id
-            var movie = await _movieRepository.GetByIdAsync(dto.MovieId);
-            if (movie == null)
-                throw new Exception("Le film n'existe pas");
+            Movie movie = null;
 
-            // Vérifier si une demande pour ce film existe déjà
+            // 1️⃣ Si MovieId est fourni, récupérer le film en base
+            if (dto.MovieId.HasValue)
+            {
+                movie = await _movieRepository.GetByIdAsync(dto.MovieId.Value);
+                if (movie == null)
+                    throw new Exception("Le film n'existe pas");
+            }
+            // 2️⃣ Sinon si TmdbId est fourni, créer le film via TMDb
+            else if (dto.TmdbId.HasValue)
+            {
+                // Vérifier si le film existe déjà en base via TMDbId
+                movie = await _movieRepository.GetByTmdbIdAsync(dto.TmdbId.Value);
+                if (movie == null)
+                {
+                    var movieDto = await _movieService.GetMovieByTmdbIdAsync(dto.TmdbId.Value);
+
+                    movie = new Movie
+                    {
+                        Id = Guid.NewGuid(),
+                        ImdbId = movieDto.ImdbId,
+                        Title = movieDto.Title,
+                        PosterUrl = movieDto.PosterUrl,
+                        Plot = movieDto.Plot,
+                        Year = movieDto.Year,
+                        Duration = movieDto.Duration,
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    await _movieRepository.AddAsync(movie);
+                    await _movieRepository.SaveChangesAsync();
+                }
+            }
+            else
+            {
+                throw new Exception("MovieId ou TmdbId requis pour créer une demande.");
+            }
+
+            // 3️⃣ Vérifier si une demande existe déjà pour ce film
             var existingRequest = await _requestRepository.GetByMovieAsync(movie.Id);
             if (existingRequest != null)
                 throw new Exception("Ce film a déjà été demandé");
 
-            // Créer la demande
+            // 4️⃣ Créer la demande
             var request = new Request
             {
                 Id = Guid.NewGuid(),
@@ -49,9 +83,11 @@ namespace AppliFilms.Api.Services
             };
 
             await _requestRepository.AddAsync(request);
+            await _requestRepository.SaveChangesAsync();
 
             var user = await _userRepository.GetByIdAsync(userId);
 
+            // 5️⃣ Retourner le DTO
             return new RequestDto
             {
                 Id = request.Id,

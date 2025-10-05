@@ -8,8 +8,8 @@ namespace AppliFilms.Api.Entities
         [BsonId]
         [BsonRepresentation(BsonType.String)]
         public Guid Id { get; set; } = Guid.NewGuid();
-
-        public string ImdbId { get; set; }  // identifiant unique OMDb
+        public string ImdbId { get; set; }
+        public int TmdbId { get; set; }
         public string? Title { get; set; }
         public string? Year { get; set; }
         public string? PosterUrl { get; set; }

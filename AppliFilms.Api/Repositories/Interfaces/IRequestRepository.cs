@@ -11,5 +11,6 @@ namespace AppliFilms.Api.Repositories.Interfaces
         Task RemoveAsync(Request? request);
         Task DeleteAllAsync();
         Task UpdateAsync(Request? request);
+        Task SaveChangesAsync();
     }
 }

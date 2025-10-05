@@ -46,6 +46,7 @@ namespace AppliFilms.Api.Repositories
             await _requests.ReplaceOneAsync(r => r.Id == request.Id, request);
         }
 
+        public Task SaveChangesAsync() => Task.CompletedTask;
 
     }
 }

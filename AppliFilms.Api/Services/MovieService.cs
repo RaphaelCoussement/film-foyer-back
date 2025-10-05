@@ -110,8 +110,64 @@ namespace AppliFilms.Api.Services
                 })
                 .ToList();
         }
+        
+        public async Task<MovieDto> GetMovieByTmdbIdAsync(int tmdbId)
+        {
+            // Vérifie si le film existe déjà en base
+            var existingMovie = await _movieRepository.GetByTmdbIdAsync(tmdbId);
+            if (existingMovie != null)
+            {
+                return new MovieDto
+                {
+                    ImdbId = existingMovie.ImdbId,
+                    Title = existingMovie.Title,
+                    PosterUrl = existingMovie.PosterUrl,
+                    Plot = existingMovie.Plot,
+                    Year = existingMovie.Year,
+                    Duration = existingMovie.Duration
+                };
+            }
 
+            // 1️⃣ Récupération des détails TMDb
+            var detailsUrl = $"https://api.themoviedb.org/3/movie/{tmdbId}?language=fr";
+            var details = await _httpClient.GetFromJsonAsync<TmdbMovieDetails>(detailsUrl);
 
+            if (details == null)
+                throw new Exception($"Impossible de récupérer les détails du film TMDb #{tmdbId}.");
+
+            // 2️⃣ Création et sauvegarde de l'entité Movie
+            var movieEntity = new Movie
+            {
+                Id = Guid.NewGuid(),
+                TmdbId = details.Id,
+                ImdbId = details.ImdbId ?? details.Id.ToString(),
+                Title = details.Title,
+                PosterUrl = string.IsNullOrEmpty(details.PosterPath)
+                    ? null
+                    : $"https://image.tmdb.org/t/p/w500{details.PosterPath}",
+                Plot = details.Overview,
+                Year = !string.IsNullOrEmpty(details.ReleaseDate)
+                    ? DateTime.Parse(details.ReleaseDate).Year.ToString()
+                    : null,
+                Duration = details.Runtime ?? 0,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _movieRepository.AddAsync(movieEntity);
+            await _movieRepository.SaveChangesAsync();
+
+            // 3️⃣ Retourne un DTO
+            return new MovieDto
+            {
+                ImdbId = movieEntity.ImdbId,
+                Title = movieEntity.Title,
+                PosterUrl = movieEntity.PosterUrl,
+                Plot = movieEntity.Plot,
+                Year = movieEntity.Year,
+                Duration = movieEntity.Duration
+            };
+        }
+        
         private class TmdbSearchResponse
         {
             [JsonPropertyName("results")]

@@ -19,6 +19,9 @@ namespace AppliFilms.Api.Repositories
 
         public async Task<Movie?> GetByIdAsync(Guid id) =>
             await _movies.Find(m => m.Id == id).FirstOrDefaultAsync();
+        
+        public async Task<Movie?> GetByTmdbIdAsync(int tmdbId) =>
+            await _movies.Find(m => m.TmdbId == tmdbId).FirstOrDefaultAsync();
 
         public async Task<Movie?> GetByTitleAsync(string title) =>
             await _movies.Find(m => m.Title == title).FirstOrDefaultAsync();
