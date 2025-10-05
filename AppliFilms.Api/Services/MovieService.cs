@@ -26,6 +26,7 @@ namespace AppliFilms.Api.Services
 
         public async Task<MovieDto> GetMovieByTitleAsync(string title)
         {
+            // Vérifie si le film existe déjà en base
             var existingMovie = await _movieRepository.GetByTitleAsync(title);
             if (existingMovie != null)
             {
@@ -39,39 +40,43 @@ namespace AppliFilms.Api.Services
                     Duration = existingMovie.Duration
                 };
             }
-            
+
+            // 1️⃣ Recherche du film sur TMDb
             var searchUrl = $"https://api.themoviedb.org/3/search/movie?query={Uri.EscapeDataString(title)}&language=fr";
             var searchResponse = await _httpClient.GetFromJsonAsync<TmdbSearchResponse>(searchUrl);
 
-            var movie = searchResponse?.Results?.FirstOrDefault();
-            if (movie == null)
-                throw new Exception("Film non trouvé sur TMDb");
+            var movieResult = searchResponse?.Results?.FirstOrDefault();
+            if (movieResult == null)
+                throw new Exception($"Aucun film trouvé pour '{title}' sur TMDb.");
 
-            // Détails du film
-            var detailsUrl = $"https://api.themoviedb.org/3/movie/{movie.Id}?language=fr";
+            // 2️⃣ Récupération des détails du film (inclut le runtime)
+            var detailsUrl = $"https://api.themoviedb.org/3/movie/{movieResult.Id}?language=fr";
             var details = await _httpClient.GetFromJsonAsync<TmdbMovieDetails>(detailsUrl);
 
             if (details == null)
-                throw new Exception("Impossible de récupérer les détails du film");
+                throw new Exception($"Impossible de récupérer les détails du film '{title}'.");
 
-            // Crée l'entité Movie
+            // 3️⃣ Création et sauvegarde de l'entité Movie
             var movieEntity = new Movie
             {
                 Id = Guid.NewGuid(),
                 ImdbId = details.ImdbId ?? details.Id.ToString(),
                 Title = details.Title,
-                PosterUrl = string.IsNullOrEmpty(details.PosterPath) ? null : $"https://image.tmdb.org/t/p/w500{details.PosterPath}",
+                PosterUrl = string.IsNullOrEmpty(details.PosterPath)
+                    ? null
+                    : $"https://image.tmdb.org/t/p/w500{details.PosterPath}",
                 Plot = details.Overview,
                 Year = !string.IsNullOrEmpty(details.ReleaseDate)
                     ? DateTime.Parse(details.ReleaseDate).Year.ToString()
                     : null,
-                Duration = details.Runtime,
+                Duration = details.Runtime ?? 0, // ✅ Runtime garanti non nul
                 CreatedAt = DateTime.UtcNow
             };
-            
+
             await _movieRepository.AddAsync(movieEntity);
             await _movieRepository.SaveChangesAsync();
-            
+
+            // 4️⃣ Retourne un DTO propre
             return new MovieDto
             {
                 ImdbId = movieEntity.ImdbId,
@@ -82,6 +87,30 @@ namespace AppliFilms.Api.Services
                 Duration = movieEntity.Duration
             };
         }
+        
+        public async Task<List<MovieSearchResultDto>> SearchMoviesAsync(string title)
+        {
+            var searchUrl = $"https://api.themoviedb.org/3/search/movie?query={Uri.EscapeDataString(title)}&language=fr";
+            var searchResponse = await _httpClient.GetFromJsonAsync<TmdbSearchResponse>(searchUrl);
+
+            if (searchResponse?.Results == null || !searchResponse.Results.Any())
+                return new List<MovieSearchResultDto>();
+
+            return searchResponse.Results
+                .Take(10)
+                .Select(m => new MovieSearchResultDto
+                {
+                    TmdbId = m.Id,
+                    Title = m.Title,
+                    Overview = m.Overview,
+                    ReleaseDate = m.ReleaseDate,
+                    PosterUrl = string.IsNullOrEmpty(m.PosterPath)
+                        ? null
+                        : $"https://image.tmdb.org/t/p/w500{m.PosterPath}"
+                })
+                .ToList();
+        }
+
 
         private class TmdbSearchResponse
         {

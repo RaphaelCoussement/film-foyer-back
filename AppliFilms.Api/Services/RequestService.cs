@@ -118,7 +118,8 @@ namespace AppliFilms.Api.Services
                         Title = movie?.Title,
                         PosterUrl = movie?.PosterUrl,
                         Plot = movie?.Plot,
-                        Year = movie?.Year
+                        Year = movie?.Year,
+                        Duration = movie?.Duration
                     }
                 });
             }
