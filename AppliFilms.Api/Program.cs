@@ -14,6 +14,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IMovieRepository, MovieRepository>();
 builder.Services.AddScoped<IRequestRepository, RequestRepository>();
 builder.Services.AddScoped<IApprovalRepository, ApprovalRepository>();
+builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
 
 // DI - Services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -21,6 +22,7 @@ builder.Services.AddHttpClient<IMovieService, MovieService>();
 builder.Services.AddScoped<IRequestService, RequestService>();
 builder.Services.AddScoped<IApprovalService, ApprovalService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IWishlistService, WishlistService>();
 
 // DB - MongoDB
 builder.Services.Configure<MongoDbSettings>(
