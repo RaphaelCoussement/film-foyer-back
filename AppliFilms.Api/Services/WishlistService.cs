@@ -35,6 +35,8 @@ public class WishlistService : IWishlistService
             {
                 Id = item.Id,
                 MovieId = movie.Id,
+                Year = movie.Year,
+                Duration = movie.Duration,
                 Title = movie.Title,
                 PosterUrl = movie.PosterUrl,
                 AddedAt = item.AddedAt
