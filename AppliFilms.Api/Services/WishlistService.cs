@@ -1,3 +1,4 @@
+using AppliFilms.Api.DTOs.Requests;
 using AppliFilms.Api.DTOs.Wishlist;
 using AppliFilms.Api.Entities;
 using AppliFilms.Api.Repositories.Interfaces;
@@ -10,15 +11,18 @@ public class WishlistService : IWishlistService
     private readonly IWishlistRepository _wishlistRepository;
     private readonly IMovieRepository _movieRepository;
     private readonly IMovieService _movieService;
+    private readonly IRequestService _requestService;
 
     public WishlistService(
         IWishlistRepository wishlistRepository,
         IMovieRepository movieRepository,
-        IMovieService movieService)
+        IMovieService movieService, 
+        IRequestService requestService)
     {
         _wishlistRepository = wishlistRepository;
         _movieRepository = movieRepository;
         _movieService = movieService;
+        _requestService = requestService;
     }
 
     public async Task<List<WishlistItemDto>> GetUserWishlistAsync(Guid userId)
@@ -114,5 +118,26 @@ public class WishlistService : IWishlistService
 
         await _wishlistRepository.RemoveAsync(item);
         return true;
+    }
+    
+    public async Task<RequestDto> SuggestWishlistItemAsync(SuggestWishlistItemDto dto, Guid userId)
+    {
+        // 1️⃣ Vérifier que le film est bien dans la wishlist
+        var wishlistItem = await _wishlistRepository.GetByUserAndMovieAsync(userId, dto.MovieId);
+        if (wishlistItem == null)
+            throw new Exception("Le film n'est pas dans votre wishlist");
+
+        // 2️⃣ Créer une demande pour ce film via RequestService
+        var requestDto = new CreateRequestDto
+        {
+            MovieId = dto.MovieId
+        };
+
+        var request = await _requestService.CreateRequestAsync(requestDto, userId);
+
+        // 3️⃣ Retirer le film de la wishlist
+        await _wishlistRepository.RemoveAsync(wishlistItem);
+
+        return request;
     }
 }

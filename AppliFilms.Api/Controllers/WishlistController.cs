@@ -45,5 +45,20 @@ namespace AppliFilms.Api.Controllers
             if (!success) return NotFound(new { message = "Film non trouvé dans ta wishlist." });
             return NoContent();
         }
+        
+        [HttpPost("suggest")]
+        public async Task<IActionResult> SuggestMovie([FromBody] SuggestWishlistItemDto dto)
+        {
+            try
+            {
+                var userId = GetUserId();
+                var request = await _wishlistService.SuggestWishlistItemAsync(dto, userId);
+                return Ok(request);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }
