@@ -58,5 +58,26 @@ namespace AppliFilms.Api.Services
                 ApprovalCount = request.ApprovalCount
             };
         }
+        
+        public async Task UnapproveRequestAsync(Guid requestId, Guid userId)
+        {
+            var existingApproval = await _approvalRepository.GetByRequestAndUserAsync(requestId, userId);
+            if (existingApproval == null)
+                throw new Exception("Vous n'avez pas encore voté pour cette demande");
+
+            // Supprimer l'approbation
+            await _approvalRepository.DeleteAsync(existingApproval.Id);
+
+            // Mettre à jour la demande
+            var request = await _requestRepository.GetByIdAsync(requestId);
+            if (request == null)
+                throw new Exception("Demande introuvable");
+
+            var approvalIds = request.ApprovalIds.ToList();
+            approvalIds.Remove(existingApproval.Id);
+            request.ApprovalIds = approvalIds.ToArray();
+            request.ApprovalCount = request.ApprovalIds.Length;
+            await _requestRepository.UpdateAsync(request);
+        }
     }
 }

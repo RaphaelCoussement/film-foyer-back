@@ -34,5 +34,10 @@ namespace AppliFilms.Api.Repositories
 
         public async Task<List<Approval>> GetByRequestAsync(Guid requestId) =>
             await _approvals.Find(a => a.RequestId == requestId).ToListAsync();
+        
+        public async Task DeleteAsync(Guid id)
+        {
+            await _approvals.DeleteOneAsync(a => a.Id == id);
+        }
     }
 }

@@ -10,5 +10,6 @@ namespace AppliFilms.Api.Repositories.Interfaces
         Task SaveChangesAsync();
         
         Task<List<Approval>> GetByRequestAsync(Guid requestId);
+        Task DeleteAsync(Guid id);
     }
 }

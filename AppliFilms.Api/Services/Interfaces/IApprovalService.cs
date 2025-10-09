@@ -5,5 +5,7 @@ namespace AppliFilms.Api.Services.Interfaces
     public interface IApprovalService
     {
         Task<ApprovalDto> ApproveRequestAsync(Guid requestId, Guid userId);
+        Task UnapproveRequestAsync(Guid requestId, Guid userId);
+
     }
 }
