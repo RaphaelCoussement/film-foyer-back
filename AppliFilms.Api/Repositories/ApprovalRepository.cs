@@ -21,6 +21,9 @@ namespace AppliFilms.Api.Repositories
             await _approvals.Find(a => a.RequestId == requestId && a.UserId == userId)
                 .FirstOrDefaultAsync();
 
+        public async Task<List<Approval>> GetByUserAsync(Guid userId) =>
+            await _approvals.Find(a => a.UserId == userId).ToListAsync();
+        
         public async Task<int> CountByRequestAsync(Guid requestId) =>
             (int)await _approvals.CountDocumentsAsync(a => a.RequestId == requestId);
 

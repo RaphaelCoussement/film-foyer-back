@@ -5,6 +5,7 @@ namespace AppliFilms.Api.Repositories.Interfaces
     public interface IApprovalRepository
     {
         Task<Approval?> GetByRequestAndUserAsync(Guid requestId, Guid userId);
+        Task<List<Approval>> GetByUserAsync(Guid userId);
         Task<int> CountByRequestAsync(Guid requestId);
         Task AddAsync(Approval? approval);
         Task SaveChangesAsync();

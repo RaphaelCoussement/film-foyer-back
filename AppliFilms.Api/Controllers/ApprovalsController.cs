@@ -48,4 +48,20 @@ public class ApprovalsController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+    
+    [HttpGet("user")]
+    [Authorize]
+    public async Task<IActionResult> GetUserApprovals()
+    {
+        try
+        {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var approvals = await _approvalService.GetUserApprovalsAsync(userId);
+            return Ok(approvals);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }

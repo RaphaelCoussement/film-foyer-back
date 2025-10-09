@@ -79,5 +79,12 @@ namespace AppliFilms.Api.Services
             request.ApprovalCount = request.ApprovalIds.Length;
             await _requestRepository.UpdateAsync(request);
         }
+        
+        public async Task<List<Guid>> GetUserApprovalsAsync(Guid userId)
+        {
+            var approvals = await _approvalRepository.GetByUserAsync(userId);
+            return approvals.Select(a => a.RequestId).ToList();
+        }
+
     }
 }
